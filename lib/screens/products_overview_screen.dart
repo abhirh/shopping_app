@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shopping_app/providers/cart_provider.dart';
+import 'package:shopping_app/widgets/app_drawer.dart';
 import 'package:shopping_app/widgets/products_grid.dart';
 import 'package:shopping_app/widgets/badge.dart' as mybadge;
+
+import 'cart_screen.dart';
 
 enum FilterOptions { Favorites, All }
 
@@ -19,6 +22,7 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[300],
       appBar: AppBar(
+        centerTitle: true,
         title: Text('My Shopping App'),
         actions: [
           PopupMenuButton(
@@ -49,13 +53,14 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
                 mybadge.Badge(value: cartData.itemCount.toString(), child: ch!),
             child: IconButton(
               onPressed: () {
-                // Navigator.of(context).pushNamed(CartScreen.routeName);
+                Navigator.of(context).pushNamed(CartScreen.routeName);
               },
               icon: Icon(Icons.shopping_cart),
             ),
           ),
         ],
       ),
+      drawer: AppDrawer(),
       body: ProductsGrid(
         showFavs: _showOnlyFavorites,
       ),
