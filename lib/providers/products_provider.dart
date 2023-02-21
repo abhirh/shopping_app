@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
-
-import './product.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:http/http.dart' as http;
+import 'product.dart';
+import 'dart:convert';
 
 class Products with ChangeNotifier {
   List<Product> _items = [
@@ -37,33 +38,69 @@ class Products with ChangeNotifier {
           'https://upload.wikimedia.org/wikipedia/commons/thumb/1/14/Cast-Iron-Pan.jpg/1024px-Cast-Iron-Pan.jpg',
     ),
   ];
-  //var _showFavoritesOnly = false;
+
+  var _showFavouritesOnly = false;
 
   List<Product> get items {
-    //if (_showFavoritesOnly) {
-    //   return _items.where((prodItem) => prodItem.isFavourite).toList();
-    // }
+    if (_showFavouritesOnly) {
+      return _items.where((prodItems) => prodItems.isFavourite).toList();
+    }
     return [..._items];
   }
 
-  // void showFavoritesOnly() {
-  //   _showFavoritesOnly = true;
-  //   notifyListeners();
-  // }
-
-  // void showAll() {
-  //   _showFavoritesOnly = false;
-  //   notifyListeners();
-  // }
   List<Product> get favoriteItems {
-    return _items.where((prodItem) => prodItem.isFavourite).toList();
+    return _items.where((prodItems) => prodItems.isFavourite).toList();
+  }
+
+  void showFavorite() {}
+
+  void showAll() {}
+
+  void addProduct(Product product) {
+    var url = Uri.parse(
+        'https://shoppingapp-94d70-default-rtdb.firebaseio.com/products.json');
+    http
+        .post(
+      url,
+      body: json.encode({
+        'title': product.title,
+        'description': product.description,
+        'price': product.price,
+        'imageUrl': product.imageUrl,
+        'isFavourite': product.isFavourite,
+      }),
+    )
+        .then((response) {
+      // final newProduct = Product(
+      //     id: DateTime.now().toString(),
+      //     title: product.title,
+      //     description: product.description,
+      //     price: product.price,
+      //     imageUrl: product.imageUrl);
+      // _items.add(newProduct);
+      // // _items.insert(0, newProduct);
+      // notifyListeners();
+    });
   }
 
   Product findById(String id) {
     return _items.firstWhere((prod) => prod.id == id);
   }
 
-  void addProduct() {
+  void updateProduct(String id, Product newProduct) {
+    final prodIndex = _items.indexWhere((prod) => prod.id == id);
+    if (prodIndex >= 0) {
+      _items[prodIndex] = newProduct;
+      notifyListeners();
+    } else {
+      print('no prod update');
+    }
+  }
+
+  void deleteProduct(String id) {
+    _items.removeWhere((prod) => prod.id == id);
     notifyListeners();
   }
 }
+// https://upload.wikimedia.org/wikipedia/commons/8/87/Smiley_Face.JPG
+// https://tinyjpg.com/images/social/website.jpg
