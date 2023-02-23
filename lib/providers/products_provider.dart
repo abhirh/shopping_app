@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'product.dart';
 import 'dart:convert';
+import '../models/http_exception.dart';
 
 class Products with ChangeNotifier {
   List<Product> _items = [
@@ -56,7 +57,7 @@ class Products with ChangeNotifier {
 
   void showAll() {}
 
-  Future<void> fetchandSetProducts() async {
+  Future<void> fetchAndSetProducts() async {
     var url = Uri.parse(
         'https://shoppingapp-94d70-default-rtdb.firebaseio.com/products.json');
     try {
@@ -113,19 +114,41 @@ class Products with ChangeNotifier {
     return _items.firstWhere((prod) => prod.id == id);
   }
 
-  void updateProduct(String id, Product newProduct) {
+  Future<void> updateProduct(String id, Product newProduct) async {
     final prodIndex = _items.indexWhere((prod) => prod.id == id);
     if (prodIndex >= 0) {
-      _items[prodIndex] = newProduct;
+      final url = Uri.parse(
+          'https://shoppingapp-94d70-default-rtdb.firebaseio.com/products/$id.json');
+      await http.patch(url,
+          body: json.encode({
+            'title': newProduct.title,
+            'description': newProduct.description,
+            'price': newProduct.price,
+            'imageUrl': newProduct.imageUrl
+          }));
       notifyListeners();
     } else {
       print('no prod update');
     }
   }
 
-  void deleteProduct(String id) {
-    _items.removeWhere((prod) => prod.id == id);
+  Future<void> deleteProduct(String id) async {
+    final url = Uri.parse(
+        'https://shoppingapp-94d70-default-rtdb.firebaseio.com/products/$id.json');
+    final existingProductIndex = _items.indexWhere((prod) => prod.id == id);
+    Product? existingProduct = _items[existingProductIndex];
+    _items.removeAt(existingProductIndex);
     notifyListeners();
+
+    final response = await http.delete(url);
+    if (response.statusCode >= 400) {
+      _items.insert(existingProductIndex, existingProduct);
+      throw HttpException(message: 'Could not delete product.');
+    }
+    existingProduct = null;
+    /*   catchError((_) {
+      _items.insert(existingProductIndex, existingProduct!);
+    });*/
   }
 }
 //https://upload.wikimedia.org/wikipedia/commons/8/87/Smiley_Face.JPG
